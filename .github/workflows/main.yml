@@ -51,9 +51,6 @@ jobs:
 
             cd /home/ubuntu/python_project
 
-            # Kill any old Flask process
-            pkill -f "python3 app.py" || true
-
             # Create virtual environment if it doesn't exist
             [ -d venv ] || python3 -m venv venv
 
