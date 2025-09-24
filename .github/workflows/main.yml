@@ -38,7 +38,7 @@ jobs:
           source: "."
           target: "/home/ubuntu/python_project"
 
-      - name: Setup Python and Virtual Environment on EC2
+      - name: Setup environment and run Flask on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -48,16 +48,9 @@ jobs:
             sudo apt update -y
             sudo apt install -y python3-pip python3-venv
             sudo pip3 install flask --break-system-packages
-            python3 -m venv /home/ubuntu/python_project/venv
-            source /home/ubuntu/python_project/venv/bin/activate
 
-      - name: Run Flask App on EC2
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
             cd /home/ubuntu/python_project
+            python3 -m venv venv
+            # Activate virtual environment and run Flask
             source venv/bin/activate
             nohup python3 app.py > app.log 2>&1 &
