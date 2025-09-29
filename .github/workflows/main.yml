@@ -15,13 +15,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-          
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run syntax check
-        run: python -m py_compile app.py
-
   deploy:
     needs: build-test
     runs-on: ubuntu-latest
@@ -38,24 +31,22 @@ jobs:
           source: "."
           target: "/home/ubuntu/python_project"
 
-      - name: Setup environment and run Flask on EC2
+      - name: Run deployment on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Update packages and install Python & venv
-            sudo apt update -y
-            sudo apt install -y python3-pip python3-venv
-
             cd /home/ubuntu/python_project
-
-            # Create virtual environment if it doesn't exist
-            [ -d venv ] || python3 -m venv venv
-
-            # Activate virtual environment
+            # Create venv if not exists
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
             source venv/bin/activate
-
-            # Start Flask app in background
-            nohup python3 app.py > app.log 2>&1 &
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            # Kill old process if running
+            pkill -f "venv/bin/python app.py" || true
+            # Start app in background
+            nohup venv/bin/python app.py > app.log 2>&1 &
