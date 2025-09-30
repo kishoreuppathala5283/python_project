@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.10"
 
-      # 3️⃣ Install dependencies locally
+      # 3️⃣ Install dependencies locally (optional)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -30,7 +30,7 @@ jobs:
         run: |
           pytest || echo "No tests found, skipping"
 
-      # 5️⃣ SSH into EC2 to deploy with Gunicorn
+      # 5️⃣ SSH into EC2 to deploy
       - name: SSH and deploy Flask app
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -43,14 +43,16 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y python3 python3-venv python3-pip git
 
+            # Create deployment folder if missing
+            mkdir -p /var/www/flask_app
+            cd /var/www/flask_app
+
             # Clone or update repo
-            if [ -d "/var/www/flask_app/.git" ]; then
-                cd /var/www/flask_app
+            if [ -d ".git" ]; then
                 git reset --hard
                 git pull origin main
             else
-                git clone "https://github.com/kishoreuppathala5283/python_project.git" /var/www/flask_app
-                cd /var/www/flask_app
+                git clone "https://github.com/kishoreuppathala5283/python_project.git" .
             fi
 
             # Setup virtual environment
@@ -69,5 +71,5 @@ jobs:
             # Kill old Gunicorn processes
             pkill -f "gunicorn" || true
 
-            # Start Flask app with Gunicorn
+            # Start Flask app with Gunicorn in background
             nohup venv/bin/gunicorn -w 3 -b 0.0.0.0:5000 app:app > app.log 2>&1 &
