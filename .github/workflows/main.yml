@@ -60,7 +60,7 @@ jobs:
 
             # Create virtual environment if not exists
             if [ ! -d "venv" ]; then
-                python3 -m venv venv
+              python3 -m venv venv
             fi
 
             # Activate virtual environment and install dependencies
@@ -70,7 +70,7 @@ jobs:
 
             # Setup systemd service if it doesn't exist
             if [ ! -f "/etc/systemd/system/python_project.service" ]; then
-              sudo tee /etc/systemd/system/python_project.service > /dev/null <<EOL
+sudo tee /etc/systemd/system/python_project.service > /dev/null <<EOL
 [Unit]
 Description=Python Project App
 After=network.target
