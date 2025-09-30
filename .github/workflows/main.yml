@@ -24,11 +24,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest  # Ensure pytest is installed
 
-      # 4️⃣ Run tests
+      # 4️⃣ Run tests (optional if tests/ folder exists)
       - name: Run tests
         run: |
-          pytest tests/  # Adjust to your test folder
+          if [ -d "tests" ]; then
+            echo "Running tests in tests/ folder..."
+            pytest tests/
+          else
+            echo "No tests folder found, skipping pytest."
+          fi
 
       # 5️⃣ SSH to EC2 and deploy
       - name: SSH and deploy to EC2
@@ -59,10 +65,10 @@ jobs:
             # Install dependencies on EC2
             pip install --user -r requirements.txt
 
-            # Stop previous app if running and start the app (example using systemd)
+            # Stop previous app if running and start the app
             if systemctl is-active --quiet python_app; then
               sudo systemctl restart python_app
             else
-              # You need a systemd service file or use nohup/pm2 for Python apps
+              # Do not modify this, use nohup as requested
               nohup python3 app.py &
             fi
