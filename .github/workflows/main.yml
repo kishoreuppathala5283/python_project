@@ -1,4 +1,4 @@
-name: Python CI/CD to EC2 (Ubuntu + venv + systemd)
+name: Python CI/CD to EC2
 
 on:
   push:
@@ -9,18 +9,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
+      # 1️⃣ Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Python locally (optional)
+      # 2️⃣ Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.11
+          python-version: 3.11  # Set your Python version
 
-      # 3️⃣ Install dependencies locally (optional)
-      - name: Install dependencies locally
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -28,9 +28,9 @@ jobs:
       # 4️⃣ Run tests
       - name: Run tests
         run: |
-          pytest tests/ || echo "No tests found"
+          pytest tests/  # Adjust to your test folder
 
-      # 5️⃣ SSH to EC2 and deploy using virtual environment + systemd
+      # 5️⃣ SSH to EC2 and deploy
       - name: SSH and deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -39,56 +39,30 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Update system and install dependencies
-            sudo apt update && sudo apt install -y python3-venv python3-pip git
-
-            # Create project folder
-            sudo mkdir -p /var/www/python_project
-            sudo chown -R ubuntu:ubuntu /var/www/python_project
-            sudo chmod -R 755 /var/www/python_project
+            # Create project folder if it doesn't exist
+            sudo mkdir -p /var/www/python_app
+            sudo chown -R ubuntu:ubuntu /var/www/python_app
+            sudo chmod -R 755 /var/www/python_app
 
             # Clone repo or pull latest changes
-            if [ -d "/var/www/python_project/.git" ]; then
-              cd /var/www/python_project
+            if [ -d "/var/www/python_app/.git" ]; then
+              cd /var/www/python_app
               git reset --hard
               git pull origin main
             else
-              git clone "https://github.com/kishoreuppathala5283/python_project.git" /var/www/python_project
+              git clone "https://github.com/kishoreuppathala5283/python_project.git" /var/www/python_app
             fi
 
-            cd /var/www/python_project
+            # Navigate to project folder
+            cd /var/www/python_app
 
-            # Create virtual environment if not exists
-            if [ ! -d "venv" ]; then
-              python3 -m venv venv
+            # Install dependencies on EC2
+            pip install --user -r requirements.txt
+
+            # Stop previous app if running and start the app (example using systemd)
+            if systemctl is-active --quiet python_app; then
+              sudo systemctl restart python_app
+            else
+              # You need a systemd service file or use nohup/pm2 for Python apps
+              nohup python3 app.py &
             fi
-
-            # Activate virtual environment and install dependencies
-            source venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
-
-            # Setup systemd service if it doesn't exist
-            if [ ! -f "/etc/systemd/system/python_project.service" ]; then
-sudo tee /etc/systemd/system/python_project.service > /dev/null <<EOL
-[Unit]
-Description=Python Project App
-After=network.target
-
-[Service]
-User=ubuntu
-WorkingDirectory=/var/www/python_project
-ExecStart=/var/www/python_project/venv/bin/python app.py
-Restart=always
-Environment=PYTHONUNBUFFERED=1
-
-[Install]
-WantedBy=multi-user.target
-EOL
-              sudo systemctl daemon-reload
-              sudo systemctl enable python_project
-            fi
-
-            # Restart the app service
-            sudo systemctl restart python_project
-            sudo systemctl status python_project --no-pager
