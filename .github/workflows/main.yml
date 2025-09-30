@@ -54,7 +54,7 @@ jobs:
               git reset --hard
               git pull origin main
             else
-              git clone "https://github.com/<your-username>/<your-repo>.git" /var/www/flask_app
+              git clone "https://github.com/kishoreuppathala5283/python_project.git" /var/www/flask_app
               cd /var/www/flask_app
             fi
 
