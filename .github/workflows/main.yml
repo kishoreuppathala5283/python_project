@@ -36,10 +36,11 @@ jobs:
             git clone https://github.com/kishoreuppathala5283/python_project.git
             cd python_project
             python3 -m venv venv
+            source venv/bin/activate
           else
             cd /home/ubuntu/python_project
             git pull origin main --rebase || true
+            source venv/bin/activate
           fi
-          source venv/bin/activate
           pip install -r requirements.txt
           sudo systemctl restart flaskapp || echo "Service not created yet"
