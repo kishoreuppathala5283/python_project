@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the repository
+      # 1️⃣ Checkout the repository in GitHub Actions environment
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # 2️⃣ Set up Python
+      # 2️⃣ Set up Python (optional for Actions environment)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3️⃣ Install dependencies locally (optional, mainly for Actions environment)
+      # 3️⃣ Install dependencies locally (optional)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -39,19 +39,23 @@ jobs:
             # Clone repo if missing
             if [ ! -d "/home/ubuntu/python_project" ]; then
               cd /home/ubuntu
-              git clone https://github.com/kishoreuppathala5283/python_project.git
+              # Use SSH for GitHub repo
+              git clone git@github.com:kishoreuppathala5283/python_project.git
               cd python_project
               python3 -m venv venv
             else
               cd /home/ubuntu/python_project
             fi
 
-            # Force sync with GitHub
+            # Force sync with GitHub via SSH
             git fetch origin
             git reset --hard origin/main
 
             # Activate venv and install dependencies
-            source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+            source venv/bin/activate
             pip install -r requirements.txt
 
             # Restart Flask service
